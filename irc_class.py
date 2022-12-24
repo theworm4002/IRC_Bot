@@ -7,6 +7,7 @@ import sys
 import time
 import socket
 import datetime
+from botConfig import *
 
 class IRC:
  
@@ -14,9 +15,7 @@ class IRC:
   
     def __init__(self):
         self.lineCount = 0
-        self.delayMsgs = []
-        self.msgThreshold = 2
-        self.pingThreshold = 280  
+        self.delayMsgs = [] 
         self.lastPing = time.time()        
         self.lastMsgTime = time.time()
         self.ircSocket = socket.socket(
@@ -68,18 +67,21 @@ class IRC:
         return
  
 
-    def connect(self, BotServer, BotPortPre, BotNick, BotIdent, BotRealName, BotNickpass='', BotServerPass=''):
+    def connect(self):
         # Connect to the server
-        self.BotServer=BotServer
-        self.BotPortPre=BotPortPre
         self.BotNick=BotNick
         self.BotIdent=BotIdent
+        self.BotServer=BotServer
+        self.BotPortPre=BotPortPre        
         self.BotRealName=BotRealName
         self.BotNickpass=BotNickpass
         self.BotServerPass=BotServerPass
+        self.msgThreshold = msgThreshold
+        self.pingThreshold = pingThreshold
+
         print("Connecting to: " + BotServer)
         try:
-            self.ircSocket.shutdown(socket.SHUT_WR)
+            #self.ircSocket.shutdown(socket.SHUT_WR)
             self.ircSocket.close()
             self.ircSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         except :
@@ -131,13 +133,5 @@ class IRC:
 
         elif (time.time() - self.lastPing) >= self.pingThreshold: # If last PING was longer than set threshold, try and reconnect.
             print('PING was longer than set threshold, reconnecting')
-            self.connect(
-                self.BotServer,
-                self.BotPortPre,
-                self.BotNick,
-                self.BotIdent,
-                self.BotRealName,
-                self.BotNickpass,
-                self.BotServerPass               
-                )    
+            self.connect()    
         return ircmsg

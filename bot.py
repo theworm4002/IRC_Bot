@@ -6,7 +6,7 @@ irc = IRC()
 
 
 def main():
-    irc.connect(BotServer, BotPortPre, BotNick, BotIdent, BotRealName, BotNickpass, BotServerPass)
+    irc.connect()
 
     while True:
         irc.delayMsgCheck()
