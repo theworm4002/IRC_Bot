@@ -4,9 +4,7 @@ from botConfig import *
 
 irc = IRC()
 
-def main():
-    uptime = time.time()
-    sent = False    
+def main(): 
     irc.connect()
 
     while True:
