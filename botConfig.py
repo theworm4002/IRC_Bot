@@ -3,8 +3,10 @@
 #----------------
 # Server Settings
 #-----------------------------------------------
-BotServer = 'ninja.technet.chat'
+msgThreshold = 2
+pingThreshold = 280
 BotPortPre = '+6697'
+BotServer = 'ninja.technet.chat'
 
 #------------------
 # Bot Nick Settings
@@ -16,9 +18,3 @@ BotNickpass = ''
 BotServerPass = ''
 quitMsg = 'Bot down!'
 
-
-#--------------------
-# Nick Setup Settings
-#-----------------------------------------------
-msgThreshold = 2
-pingThreshold = 280
