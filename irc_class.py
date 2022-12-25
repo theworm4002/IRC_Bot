@@ -1,6 +1,4 @@
-# Flood controll still need work 
-# exceeds class::recvq (8321 > 8000) (Client sending too much data)
-
+# irc_class
 
 import ssl
 import sys
@@ -23,33 +21,39 @@ class IRC:
  
 
     def ircsend(self, msg):        
+        msg=msg.replace('\r',' ')
         # Catch for flooding (not done yet)
+        # can send if msg farther then 2sec
         if (time.time() - self.lastMsgTime) >= self.msgThreshold:
+            self.lineCount = 1
+            self.lastMsgTime = time.time()
+            self.ircSocket.send(bytes(f'{msg} \r\n', 'UTF-8')) 
+            print(f'Sending: {msg}')
+            
+        else: # if last msg was sent under 2sec ago
             if self.lineCount >= 2:
                 self.delayMsgs.append(msg)
             else:
                 self.lineCount += 1
                 self.lastMsgTime = time.time()
                 self.ircSocket.send(bytes(f'{msg} \r\n', 'UTF-8'))
-        else: 
-            self.lineCount = 0
-            self.lastMsgTime = time.time()
-            self.ircSocket.send(bytes(f'{msg} \r\n', 'UTF-8')) 
+                print(f'Sending: {msg}')
 
 
     def delayMsgCheck(self):
         if self.delayMsgs != []:
-            if (time.time() - self.lastMsgTime) <= self.msgThreshold:  
+            if (time.time() - self.lastMsgTime) >= self.msgThreshold:
+                self.lineCount = 0
                 delayMsgs = self.delayMsgs
                 self.delayMsgs = []
-            for line in delayMsgs:
-                    self.ircsend(line)
+                for line in delayMsgs:
+                        self.ircsend(line)
                 
 
     def sendmsg(self, target, msg): # Sends messages to the target.
         # Catch to make sure line is not too long
-        # Msg to server can be 512 char, im not checking the full msg I.E "PRIVMSG target" so im just making smaller chuncks
-        n = 450
+        # Msg to server can be 512 char, im not checking the full msg I.E "PRIVMSG target", so im making smaller chuncks
+        n = 350
         lineChunks = [msg[i:i+n] for i in range(0, len(msg), n)]
         for msg in lineChunks:        
             self.ircsend(f'PRIVMSG {target} {msg}')  
@@ -116,22 +120,25 @@ class IRC:
                     ircmsg = text.decode('cp1252')		         
         ircmsg = ircmsg.strip('\n\r')
         msgSplit = ircmsg.split(' ',2)
-
+        
         # If ircmsg.find("PING") != -1: # Reply to PINGs.
-        if ircmsg.find('PING') != -1: 
+        if ircmsg.startswith('PING :') != -1 or ircmsg.startswith('PING :') : 
             nospoof = ircmsg.split(' ', 1)[1]
             self.ircsend(f'PONG {nospoof}')
             self.setLastPing()    
             
-        # If nick in use
-        elif msgSplit[1] == '433':
-            self.ircsend(f'NICK {self.BotNick}_') 
-            if self.BotNickpass != '':   
-                self.ircsend(f'NICKSERV GHOST {self.BotNick} {self.BotNickpass}') 
-                self.ircsend(f'NICK {self.BotNick}')                     
-                self.ircsend(f'NICKSERV IDENTIFY {self.BotNickpass}')  
+        # just so it doesned index error for some reason 
+        elif len(msgSplit) > 0 : 
+            # If nick in use
+            if msgSplit[1] == '433':
+                self.ircsend(f'NICK {self.BotNick}_') 
+                if self.BotNickpass != '':   
+                    self.ircsend(f'NICKSERV GHOST {self.BotNick} {self.BotNickpass}') 
+                    self.ircsend(f'NICK {self.BotNick}')                     
+                    self.ircsend(f'NICKSERV IDENTIFY {self.BotNickpass}')  
 
-        elif (time.time() - self.lastPing) >= self.pingThreshold: # If last PING was longer than set threshold, try and reconnect.
+        # If last PING was longer than set threshold, try and reconnect.
+        elif (time.time() - self.lastPing) >= self.pingThreshold: 
             print('PING was longer than set threshold, reconnecting')
             self.connect()    
         return ircmsg
