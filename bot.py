@@ -22,7 +22,7 @@ def main():
             # Should add loggin and better checked before just reconnceting but it is what it is for now
             print('crashed reconnecting')
             irc.connect()
-
+            
 try: 
     main()
     
