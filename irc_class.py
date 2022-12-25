@@ -22,16 +22,15 @@ class IRC:
 
     def ircsend(self, msg):        
         msg=msg.replace('\r',' ')
-        # Catch for flooding (not done yet)
-        # can send if msg farther then 2sec
+        # Simple catch for flooding (not fully tested. not done yet, for big lines this will need more work)
+        # Can send if msg new more then 2sec after last one.
         if (time.time() - self.lastMsgTime) >= self.msgThreshold:
             self.lineCount = 1
             self.lastMsgTime = time.time()
             self.ircSocket.send(bytes(f'{msg} \r\n', 'UTF-8')) 
-            print(f'Sending: {msg}')
-            
+            print(f'Sending: {msg}')            
         else: # if last msg was sent under 2sec ago
-            if self.lineCount >= 2:
+            if self.lineCount >= 9:
                 self.delayMsgs.append(msg)
             else:
                 self.lineCount += 1
@@ -122,7 +121,7 @@ class IRC:
         msgSplit = ircmsg.split(' ',2)
         
         # If ircmsg.find("PING") != -1: # Reply to PINGs.
-        if ircmsg.startswith('PING :') != -1 or ircmsg.startswith('PING :') : 
+        if ircmsg.startswith('PING :') or (ircmsg.find('PING :') != -1 and ircmsg.lower().find('must') == -1): 
             nospoof = ircmsg.split(' ', 1)[1]
             self.ircsend(f'PONG {nospoof}')
             self.setLastPing()    
