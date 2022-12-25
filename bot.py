@@ -4,21 +4,26 @@ from botConfig import *
 
 irc = IRC()
 
-
 def main():
+    uptime = time.time()
+    sent = False    
     irc.connect()
 
     while True:
-        irc.delayMsgCheck()
-        ircmsg = irc.get_response()
-        try: print(ircmsg)
-        except: dontprint = 'okay'      
-        
-        # if ircmsg.find('somthing') != -1: 
-        #     irc.sendmsg(botChannel, "Hello!")
-        # if "PRIVMSG" in text and "hello" in text:
-        #     irc.sendmsg(channel, "Hello!")
-
+        try:
+            irc.delayMsgCheck()
+            ircmsg = irc.get_response()
+            try: print(ircmsg)
+            except: dontprint = 'okay'     
+            
+            # if ircmsg.find('somthing') != -1: 
+            #     irc.sendmsg(botChannel, "Hello!")
+            # if "PRIVMSG" in text and "hello" in text:
+            #     irc.sendmsg(channel, "Hello!")
+        except:
+            # Should add loggin and better checked before just reconnceting but it is what it is for now
+            print('crashed reconnecting')
+            irc.connect()
 
 try: 
     main()
