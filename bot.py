@@ -27,6 +27,7 @@ def main():
             # ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :[message]"
             # ":[Nick]!~[hostname]@[IPAddress] KICK [channel] [user2BeKicked] :[message]"   
             # ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :ACTION [message]"  ** Note: \001 ctcp action 
+            # NOTE: tilde in front of the hostname (~[hostname]) indicates that the IRC client did not respond to the servers ident request. so it may or may not be there 
             
             # if ircmsg.find('somthing') != -1: 
             #     irc.sendmsg(botChannel, "Hello!")
