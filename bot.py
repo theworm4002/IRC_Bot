@@ -8,39 +8,57 @@ def main():
     irc.connect()
 
     while True:
-        try:
-            irc.delayMsgCheck()
-            ircmsg = irc.get_response()
-            try: print(ircmsg)
-            except: dontprint = 'okay'    
-                
-            # Stuff to help you while coding your IRC bot 
-            # ":[server] PING :[message]"
-            # ":[server] [numeric] [message]"
-            # ":[Nick]!~[hostname]@[IPAddress] AWAY"
-            # ":[Nick]!~[hostname]@[IPAddress] PART [channel]"
-            # ":[Nick]!~[hostname]@[IPAddress] QUIT :[message]"
-            # ":[Nick]!~[hostname]@[IPAddress] JOIN :[channel]"         
-            # ":[Nick]!~[hostname]@[IPAddress] INVITE :[channel]"
-            # ":[Nick]!~[hostname]@[IPAddress] TOPIC [channel] :[message]"
-            # ":[Nick]!~[hostname]@[IPAddress] NOTICE [channel] :[message]"
-            # ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :[message]"
-            # ":[Nick]!~[hostname]@[IPAddress] KICK [channel] [user2BeKicked] :[message]"   
-            # ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :ACTION [message]"  ** Note: \001 ctcp action 
-            # NOTE: tilde in front of the hostname (~[hostname]) indicates that the IRC client did not respond to the servers ident request. so it may or may not be there 
-            
-            # if ircmsg.find('somthing') != -1: 
-            #     irc.sendmsg(botChannel, "Hello!")
-            # if "PRIVMSG" in text and "hello" in text:
-            #     irc.sendmsg(channel, "Hello!")
-        except:
-            # Should add loggin and better checked before just reconnceting but it is what it is for now
-            print('crashed reconnecting')
-            irc.connect()
-            
+        irc.delayMsgCheck()
+        ircmsg = irc.get_response()
+
+
+        # try: print(ircmsg)
+        # except: dontprint = 'okay'     
+
+        if (' TOPIC ' in ircmsg 
+            or ' NOTICE ' in ircmsg
+            or ' PRIVMSG ' in ircmsg
+            ):
+            ircMsgSplit = ircmsg.split(' ',3)
+            sender = ircMsgSplit[0]
+            sendersCmd = ircMsgSplit[1]
+            target = ircMsgSplit[2]
+            message = ircMsgSplit[3]
+            if message.startswith(':'): message = message[1:]
+
+            if 'NOTICE' == sendersCmd or 'PRIVMSG' == sendersCmd:
+                # msgType
+                if target.startswith('#'):
+                    msgType = 'channel'
+
+                elif target == BotNick :
+                    msgType = 'dm'
+
+
+
+ShutingDown = False
 try: 
     main()
     
 except KeyboardInterrupt: # Kill Bot from CLI using CTRL+C / SIGINT
-    irc.ircsend('QUIT {quitMsg}')
+    ShutingDown = True
+    irc.ircsend(f'QUIT {quitMsg}')
     sys.exit()
+
+
+
+
+
+# ":[server] PING :[message]"
+# ":[server] [numeric] [message]"
+# ":[Nick]!~[hostname]@[IPAddress] AWAY"
+# ":[Nick]!~[hostname]@[IPAddress] PART [channel]"
+# ":[Nick]!~[hostname]@[IPAddress] QUIT :[message]"
+# ":[Nick]!~[hostname]@[IPAddress] JOIN :[channel]"         
+# ":[Nick]!~[hostname]@[IPAddress] INVITE :[channel]"
+# ":[Nick]!~[hostname]@[IPAddress] TOPIC [channel] :[message]"
+# ":[Nick]!~[hostname]@[IPAddress] NOTICE [channel] :[message]"
+# ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :[message]"
+# ":[Nick]!~[hostname]@[IPAddress] KICK [channel] [user2BeKicked] :[message]" 
+#   
+# ":[Nick]!~[hostname]@[IPAddress] PRIVMSG [channel] :ACTION [message]"  ** Note: \001 ctcp action 
