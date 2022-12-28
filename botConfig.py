@@ -3,18 +3,25 @@
 #----------------
 # Server Settings
 #-----------------------------------------------
-msgThreshold = 2
-pingThreshold = 280
 BotPortPre = '+6697'
-BotServer = 'ninja.technet.chat'
+NickServ = 'NickServ'
+BotServer = 'irc.technet.chat'
+
 
 #------------------
 # Bot Nick Settings
 #-----------------------------------------------
-BotNick = 'testbot'
+BotNick = 'elitebot'
 BotIdent = BotNick
 BotRealName = BotNick
-BotNickpass = ''
+BotNickpass = 'P@55w01d'
 BotServerPass = ''
 quitMsg = 'Bot down!'
+
+
+#--------------------
+# Nick Setup Settings
+#-----------------------------------------------
+msgThreshold = 2
+pingThreshold = 280
 
