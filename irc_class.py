@@ -130,7 +130,6 @@ class IRC:
 
         try: 
             print(ircmsg)
-            print(msgSplit[1])
         except: dontprint = 'okay' 
         
         # If ircmsg.find("PING") != -1: # Reply to PINGs.
