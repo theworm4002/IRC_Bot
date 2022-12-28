@@ -145,7 +145,7 @@ class IRC:
             if self.connectingTime > time.time():
                 print(f'{self.connectingTime} > {time.time()}')
                 if ircmsg.find('AUTHENTICATE +') != -1:
-                    authPass = f'{self.BotNick}\x00{self.BotNick}\x00{self.BotNickpass}zz'
+                    authPass = f'{self.BotNick}\x00{self.BotNick}\x00{self.BotNickpass}'
                     ap_encoded = str(base64.b64encode(authPass.encode("UTF-8")), "UTF-8")
                     self.ircsend(f'AUTHENTICATE {ap_encoded}') 
                 elif (len(msgSplit) >= 2 and msgSplit[1] == '903'
