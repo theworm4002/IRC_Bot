@@ -4,6 +4,7 @@ import ssl
 import sys
 import time
 import socket
+import base64
 import datetime
 from botConfig import *
 
@@ -14,6 +15,8 @@ class IRC:
     def __init__(self):
         self.lineCount = 0
         self.delayMsgs = [] 
+        self.connecting = False 
+        self.connectingTime = 0
         self.lastPing = time.time()        
         self.lastMsgTime = time.time()
         self.ircSocket = socket.socket(
@@ -71,16 +74,17 @@ class IRC:
  
 
     def connect(self):
-        # Connect to the server
+        # Connect to the server        
         self.BotNick=BotNick
         self.BotIdent=BotIdent
+        self.NickServ=NickServ
         self.BotServer=BotServer
         self.BotPortPre=BotPortPre        
         self.BotRealName=BotRealName
         self.BotNickpass=BotNickpass
+        self.msgThreshold=msgThreshold
+        self.pingThreshold=pingThreshold
         self.BotServerPass=BotServerPass
-        self.msgThreshold = msgThreshold
-        self.pingThreshold = pingThreshold
 
         print("Connecting to: " + BotServer)
         try:
@@ -95,13 +99,17 @@ class IRC:
         else:
             BotPort = int(BotPortPre)
         self.ircSocket.settimeout(self.pingThreshold+2)
-        self.ircSocket.connect_ex((BotServer, BotPort))             
-        if BotServerPass != '':
-            self.ircsend(f'PASS {BotServerPass}')            
+        self.ircSocket.connect_ex((BotServer, BotPort))  
+        if BotNickpass != '':  
+            self.ircsend('CAP REQ :sasl')             
+            self.ircsend('AUTHENTICATE PLAIN') 
+            self.connecting = True  
+            self.connectingTime = time.time()+5             
+            
+        elif BotServerPass != '':
+                self.ircsend(f'PASS {BotServerPass}')            
         self.ircsend(f'USER {BotIdent} * * :{BotRealName}') 
-        self.ircsend(f'NICK {BotNick}')                     
-        if BotNickpass != '':
-            self.ircsend(f'NICKSERV IDENTIFY {BotNickpass}')     
+        self.ircsend(f'NICK {BotNick}')      
         self.setLastPing()
  
 
@@ -119,25 +127,58 @@ class IRC:
                     ircmsg = text.decode('cp1252')		         
         ircmsg = ircmsg.strip('\n\r')
         msgSplit = ircmsg.split(' ',2)
+
+        try: 
+            print(ircmsg)
+            print(msgSplit[1])
+        except: dontprint = 'okay' 
         
         # If ircmsg.find("PING") != -1: # Reply to PINGs.
         if ircmsg.startswith('PING :') or (ircmsg.find('PING :') != -1 and ircmsg.lower().find('must') == -1): 
-            nospoof = ircmsg.split(' ', 1)[1]
-            self.ircsend(f'PONG {nospoof}')
+            nospoof = ircmsg.split('ING :', 1)[1]
+            if nospoof.find(' ') != -1: nospoof = nospoof.split()[0]
+            self.ircsend(f'PONG :{nospoof}')
             self.setLastPing()    
             
+        # Try to use SASL to Auth to network else Identify to NickServ     
+        if self.connecting:
+            if self.connectingTime > time.time():
+                print(f'{self.connectingTime} > {time.time()}')
+                if ircmsg.find('AUTHENTICATE +') != -1:
+                    authPass = f'{self.BotNick}\x00{self.BotNick}\x00{self.BotNickpass}zz'
+                    ap_encoded = str(base64.b64encode(authPass.encode("UTF-8")), "UTF-8")
+                    self.ircsend(f'AUTHENTICATE {ap_encoded}') 
+                elif (len(msgSplit) >= 2 and msgSplit[1] == '903'
+                  or ircmsg.find('SASL authentication successful') != -1
+                  ):
+                    self.connecting = False
+                    self.ircsend('CAP END') 
+                elif (len(msgSplit) >= 2 and msgSplit[1] == '904'
+                  or ircmsg.find(':SASL authentication failed') != -1
+                  ):
+                    self.connecting = False
+                    self.ircsend('CAP END') 
+                    self.ircsend(f'{self.NickServ} IDENTIFY {BotNickpass}') 
+            else:
+                self.connecting = False
+                self.ircsend('CAP END')
+                self.ircsend(f'{self.NickServ} IDENTIFY {BotNickpass}') 
+
         # just so it doesned index error for some reason 
-        elif len(msgSplit) > 0 : 
+        elif len(msgSplit) >= 2 : 
             # If nick in use
             if msgSplit[1] == '433':
                 self.ircsend(f'NICK {self.BotNick}_') 
                 if self.BotNickpass != '':   
-                    self.ircsend(f'NICKSERV GHOST {self.BotNick} {self.BotNickpass}') 
+                    self.sendmsg(self.NickServ, f'GHOST {self.BotNick} {self.BotNickpass}') 
                     self.ircsend(f'NICK {self.BotNick}')                     
-                    self.ircsend(f'NICKSERV IDENTIFY {self.BotNickpass}')  
+                    self.sendmsg(self.NickServ, f'IDENTIFY {self.BotNickpass}')  
 
         # If last PING was longer than set threshold, try and reconnect.
         elif (time.time() - self.lastPing) >= self.pingThreshold: 
             print('PING was longer than set threshold, reconnecting')
             self.connect()    
         return ircmsg
+
+
+# ERROR :Closing Link:
