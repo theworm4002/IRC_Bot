@@ -3,6 +3,8 @@
 #----------------
 # Server Settings
 #-----------------------------------------------
+msgThreshold = 2
+pingThreshold = 280
 BotPortPre = '+6697'
 NickServ = 'NickServ'
 BotServer = 'irc.technet.chat'
@@ -19,9 +21,4 @@ BotServerPass = ''
 quitMsg = 'Bot down!'
 
 
-#--------------------
-# Nick Setup Settings
-#-----------------------------------------------
-msgThreshold = 2
-pingThreshold = 280
 
