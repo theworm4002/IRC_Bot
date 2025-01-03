@@ -1,1 +1,1 @@
-This is far from a fully functional bot. It was just a class example I made and to be honest it could be better but I wanted it simple for people not familiar with classes 
+This is far from a fully functional bot. It was just a class example I made and to be honest it could be better but I wanted it simple for people new to python and who were not familiar with classes. so to keep it simple things like ini or yaml files are not used and somethings are written out more than they need to be rather than making more defs/classes  
